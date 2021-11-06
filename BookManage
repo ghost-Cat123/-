@@ -1,0 +1,386 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#define MaxSize 10000
+typedef int KeyType;
+
+typedef struct //存放书籍信息
+{
+    char name[MaxSize];    //?书籍名称
+    char publish[MaxSize]; //?书籍出版社
+    char author[MaxSize];  //?书的作者
+    int number;            //?书籍编号
+    int amounts;           //?书的数量
+    int price;             //?书的价格
+} Book;
+
+typedef struct tnode //二叉搜索树结点
+{
+    KeyType key;
+    Book data;
+    struct tnode *lchild, *rchild;
+} BSTNode;
+
+typedef struct Node //链表节点
+{
+    Book data;
+    struct Node *next;
+} LNode;
+
+void Initlist(LNode *&list) //初始化链表
+{
+    list = (LNode *)malloc(sizeof(LNode));
+    list->next = NULL;
+}
+
+void Insert(LNode *&list, int n) //录入书籍信息
+{
+    int i;
+    LNode *p, *l = list;
+    for (i = 0; i < n; i++)
+    {
+        p = (LNode *)malloc(sizeof(LNode)); //创建节点
+        printf("第%d本书籍的名称，出版社，编号，作者，数量，价格\n", i + 1);
+        scanf("%s", p->data.name); //输入数据
+        scanf("%s", p->data.publish);
+        scanf("%d", &p->data.number);
+        scanf("%s", p->data.author);
+        scanf("%d", &p->data.amounts);
+        scanf("%d", &p->data.price);
+        l->next = p; //尾插法建表
+        l = p;
+    }
+    l->next = NULL;
+}
+
+void show(LNode *&list) //显示所有书籍信息
+{
+    LNode *p = list->next;
+    while (p != NULL) //p不为空时循环
+    {
+        printf("%s %s %d %s %d %d\n", p->data.name, p->data.publish, p->data.number,
+               p->data.author, p->data.amounts, p->data.price); //输出
+        p = p->next;                                            //指针后移
+    }
+}
+
+void find(LNode *&list, char name[]) //根据书名进行查找，返回此书籍的其他信息
+{
+    LNode *p = list->next;
+    while (p != NULL)
+    {
+        if (strcmp(p->data.name, name) == 0)
+        {
+            printf("出版社:%s,作者:%s,编号:%d,数量:%d,价格:%d,\n", p->data.publish, p->data.author, p->data.number, p->data.amounts, p->data.price);
+            return;
+        }
+        p = p->next;
+    }
+    printf("图书馆暂无此书\n");
+}
+
+void ChangData(LNode *&list, char name[])
+{
+    LNode *p = list->next;
+    int amounts;
+    while (p != NULL)
+    {
+        if (strcmp(p->data.name, name) == 0)
+        {
+            printf("当前数量:%d\n", p->data.amounts);
+            printf("请输入您要修改的数目");
+            scanf("%d", &amounts);
+            if (amounts >= 0)
+            {
+                p->data.amounts = amounts;
+                printf("修改成功！");
+            }
+            else
+                printf("修改失败！");
+            return;
+        }
+        p = p->next;
+    }
+    printf("图书馆暂无此书\n");
+}
+
+void Borrow(LNode *&list, char name[]) //根据书名借阅图书
+{
+    LNode *p = list->next;
+    while (p != NULL)
+    {
+        if (strcmp(p->data.name, name) == 0)
+        {
+            p->data.amounts--;
+            if (p->data.amounts == 0)
+                printf("暂无该图书，借阅失败！");
+            printf("借书完成!");
+            return;
+        }
+        p = p->next;
+    }
+    printf("图书馆暂无此书\n");
+}
+
+int Count(LNode *&list) //统计表中书籍数目
+{
+    int i = 0; //计数器
+    LNode *p = list->next;
+    while (p != NULL)
+    {
+        i += p->data.amounts;
+        p = p->next;
+    }
+    return i;
+}
+
+void SortList(LNode *&list)
+{
+    LNode *p, *q, *pre;
+    p = list->next->next;    //p指向第二个数据结点
+    list->next->next = NULL; //构造有序区
+    while (p != NULL)
+    {
+        q = p->next; //q记录p的后继节点
+        pre = list;
+        while (pre->next != NULL && pre->next->data.amounts < p->data.amounts) //比较数据域大小
+            pre = pre->next;                                                   //将有序区结点指针指向此结点
+        p->next = pre->next;
+        pre->next = p;
+        p = q; //重复上述步骤
+    }
+}
+
+void BSTSearch(BSTNode *bt, KeyType k)
+{
+    BSTNode *p = bt;
+    while (p != NULL)
+    {
+        if (p->key == k) //找到关键字为k的结点
+        {
+            printf("此编号对应的图书信息为:");
+            printf("书名:%s,出版社:%s,作者:%s,数量:%d,价格:%d\n", p->data.name, p->data.publish, p->data.author, p->data.amounts, p->data.price);
+            return;
+        }
+        else if (k < p->key)
+            p = p->lchild; //沿左子树查找
+        else
+            p = p->rchild; //沿右子树查找
+    }
+    printf("查找失败！\n");
+}
+
+int BSTInsert(BSTNode *&bt, KeyType k, LNode *list)
+{
+    BSTNode *f, *p = bt;
+    while (p != NULL) //找插入位置,即找插入新结点的双亲f结点
+    {
+        if (p->key == k) //不能插入相同的关键字
+            return 0;
+        f = p; //f指向p结点的双亲结点
+        if (k < p->key)
+            p = p->lchild; //在左子树中查找
+        else
+            p = p->rchild; //在右子树中查找
+    }
+    p = (BSTNode *)malloc(sizeof(BSTNode));
+    p->key = k;
+    p->data = list->data;         //建立一个存放关键字k的新结点
+    p->lchild = p->rchild = NULL; //新结点总是作为叶子结点插入的
+    if (bt == NULL)               //原树为空时,p作为根结点插入
+        bt = p;
+    else if (k < f->key)
+        f->lchild = p; //插入p作为f的左孩子
+    else
+        f->rchild = p; //插入p作为f的右孩子
+    return 1;          //插入成功返回1
+}
+
+void CreateBST(BSTNode *&bt, LNode *list, int n)
+{
+    LNode *p = list->next;
+    bt = NULL; //初始时bt为空树
+    int i = 0;
+    while (i < n)
+    {
+        BSTInsert(bt, p->data.number, p); //书的编号插入到二叉排序树bt中
+        p = p->next;
+        i++;
+    }
+}
+
+void InOrder(BSTNode *bt)
+{
+    if (bt != NULL)
+    {
+        InOrder(bt->lchild);
+        printf("书名:%s 编号:%d\n", bt->data.name, bt->key);
+        InOrder(bt->rchild);
+    }
+}
+
+void DestroyBST(BSTNode *&bt)
+{
+    if (bt != NULL)
+    {
+        DestroyBST(bt->lchild); //销毁左子树
+        DestroyBST(bt->rchild); //销毁右子树
+        free(bt);               //释放根结点
+    }
+}
+
+void DestroyList(LNode *&list) //销毁链表
+{
+    LNode *pre = list, *p = pre->next;
+    while (p != NULL)
+    {
+        free(pre);
+        pre = p;
+        p = p->next;
+    }
+    free(pre);
+}
+
+int main()
+{
+    BSTNode *bt;
+    LNode *list, *p = list->next;
+    Book book;
+    char name[MaxSize];
+    char publish[MaxSize];
+    char author[MaxSize];
+    Initlist(list);
+    int flag1 = 1, flag2 = 1, i, n, pos = 1, choice1, choice2, choice3, t, j, k;
+    while (flag2 == 1)
+    {
+        printf(">>>请选择登录方式:<<<\n");
+        printf("0>>>退出系统\t");
+        printf("1>>>管理员模式\t");
+        printf("2>>>用户模式\n");
+        scanf("%d", &choice1);
+        printf("\n");
+        switch (choice1)
+        {
+        case 0:
+            DestroyBST(bt);
+            DestroyList(list);
+            printf(">>>已退出该系统，欢迎下次使用！<<<");
+            flag2 = 0;
+            printf("\n");
+            printf("个人信息：\n");
+            printf("学号：20202375049\n");
+            printf("姓名：李朋辉\n");
+            printf("专业：计算机科学与技术（嵌入）\n");
+            printf("年级：2020级\n");
+            printf("班级：2班\n");
+            break;
+        case 1:
+            printf(">>>当前已选择管理员模式\n");
+            while (flag1 == 1)
+            {
+                printf(">>>请选择您要进行的操作\n");
+                printf(">>>图书管理<<<\n");
+                printf("0>>>退出管理员模式\n");
+                printf("1>>>录入书籍信息\n");
+                printf("2>>>显示当前书籍信息\n");
+                printf("3>>>根据书的编号进行排序\n");
+                printf("4>>>统计当前书籍数目\n");
+                printf("5>>>修改某本图书的数量\n");
+                scanf("%d", &choice2);
+                printf("\n");
+                switch (choice2)
+                {
+                case 0:
+                    flag1 = 0;
+                    printf("\n");
+                    break;
+                case 1:
+                    printf(">>>请输入书籍种类数量：\n");
+                    scanf("%d", &n);
+                    Insert(list, n);
+                    printf("\n");
+                    break;
+                case 2:
+                    show(list);
+                    printf("\n");
+                    break;
+                case 3:
+                    CreateBST(bt, list, n);
+                    InOrder(bt); //中序遍历，相当于排序
+                    printf("\n");
+                    break;
+                case 4:
+                    printf(">>>当前图书馆中的书籍数量为%d\n", Count(list));
+                    printf("\n");
+                    break;
+                case 5:
+                    printf(">>>请输入要修改的图书的名称：\n");
+                    gets(name);
+                    gets(name);
+                    puts(name);
+                    ChangData(list, name);
+                    printf("\n");
+                    break;
+                }
+            }
+            printf(">>>已退出管理员模式<<<\n");
+            break;
+        case 2:
+            printf(">>>当前已选择用户模式\n");
+            flag1 = 1;
+            while (flag1 == 1)
+            {
+                printf(">>>图书查询及借阅<<<\n");
+                printf(">>>请选择您要进行的操作\n");
+                printf("0>>>退出用户模式\n");
+                printf("1>>>借书\n");
+                printf("2>>>输入编号查看对应书籍信息\n");
+                printf("3>>>显示当前书籍信息\n");
+                printf("4>>>根据书名查看其他信息\n");
+                printf("5>>>根据图书数量进行排序\n");
+                scanf("%d", &choice3);
+                printf("\n");
+                switch (choice3)
+                {
+                case 0:
+                    flag1 = 0;
+                    printf("\n");
+                    break;
+                case 1:
+                    printf(">>>输入要借阅的图书名称：\n");
+                    gets(name);
+                    gets(name);
+                    puts(name);
+                    Borrow(list, name);
+                    printf("\n");
+                    break;
+                case 2:
+                    printf(">>>请输入要查找到书籍编号：\n");
+                    scanf("%d", &k);
+                    BSTSearch(bt, k);
+                    printf("\n");
+                    break;
+                case 3:
+                    show(list);
+                    break;
+                case 4:
+                    printf(">>>输入要查询的图书书名：\n");
+                    gets(name);
+                    gets(name);
+                    puts(name);
+                    find(list, name);
+                    printf("\n");
+                    break;
+                case 5:
+                    printf(">>>排序后的书籍信息数据为：\n");
+                    SortList(list);
+                    show(list);
+                    printf("\n");
+                    break;
+                }
+            }
+            printf(">>>当前已退出用户模式\n");
+            break;
+        }
+    }
+}
