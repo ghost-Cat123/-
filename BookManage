@@ -267,12 +267,6 @@ int main()
             printf(">>>已退出该系统，欢迎下次使用！<<<");
             flag2 = 0;
             printf("\n");
-            printf("个人信息：\n");
-            printf("学号：20202375049\n");
-            printf("姓名：李朋辉\n");
-            printf("专业：计算机科学与技术（嵌入）\n");
-            printf("年级：2020级\n");
-            printf("班级：2班\n");
             break;
         case 1:
             printf(">>>当前已选择管理员模式\n");
